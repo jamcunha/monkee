@@ -1,18 +1,26 @@
 import { Lexer, Token, tokenType } from "./lexer";
+import readline from "readline";
 
 const PROMPT = ">> ";
 
 export function startRepl(): void {
-    const stdin = process.openStdin();
-    process.stdout.write(PROMPT);
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: PROMPT,
+    });
 
-    stdin.addListener("data", (data) => {
-        const lexer = new Lexer(data.toString());
-        let token: Token;
-        for (token = lexer.nextToken(); token.type !== tokenType.EOF; token = lexer.nextToken()) {
-            console.log(token);
-        }
+    rl.prompt();
 
-        process.stdout.write(PROMPT);
+    rl.on("line", (line) => {
+        const lexer = new Lexer(line);
+        let tok: Token;
+        do {
+            tok = lexer.nextToken();
+            console.log(tok);
+        } while (tok.type !== tokenType.EOF);
+        rl.prompt();
+    }).on("close", () => {
+        process.exit(0);
     });
 }
