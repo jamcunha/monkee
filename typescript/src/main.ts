@@ -1,1 +1,4 @@
-console.log("Repo Init")
+import { startRepl } from './repl';
+
+console.log("Starting REPL...")
+startRepl();
