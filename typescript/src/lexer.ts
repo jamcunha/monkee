@@ -1,23 +1,37 @@
 export const tokenType = {
-    ILLEGAL: "ILLEGAL",
-    EOF: "EOF",
+    ILLEGAL:    "ILLEGAL",
+    EOF:        "EOF",
 
-    IDENT: "IDENT",
-    INT: "INT",
+    IDENT:      "IDENT",
+    INT:        "INT",
 
-    ASSIGN: "=",
-    PLUS: "+",
+    ASSIGN:     "=",
+    PLUS:       "+",
+    MINUS:      "-",
+    BANG:       "!",
+    ASTERISK:   "*",
+    SLASH:      "/",
 
-    COMMA: ",",
-    SEMICOLON: ";",
+    EQ:         "==",
+    NOT_EQ:     "!=",
+    LT:         "<",
+    GT:         ">",
 
-    LPAREN: "(",
-    RPAREN: ")",
-    LBRACE: "{",
-    RBRACE: "}",
+    COMMA:      ",",
+    SEMICOLON:  ";",
 
-    FUNCTION: "FUNCTION",
-    LET: "LET",
+    LPAREN:     "(",
+    RPAREN:     ")",
+    LBRACE:     "{",
+    RBRACE:     "}",
+
+    FUNCTION:   "FUNCTION",
+    LET:        "LET",
+    TRUE:       "TRUE",
+    FALSE:      "FALSE",
+    IF:         "IF",
+    ELSE:       "ELSE",
+    RETURN:     "RETURN",
 } as const;
 
 type TokenType = typeof tokenType[keyof typeof tokenType];
@@ -28,8 +42,13 @@ export type Token = {
 }
 
 const keywords = {
-    "fn": tokenType.FUNCTION,
-    "let": tokenType.LET,
+    "fn":       tokenType.FUNCTION,
+    "let":      tokenType.LET,
+    "true":     tokenType.TRUE,
+    "false":    tokenType.FALSE,
+    "if":       tokenType.IF,
+    "else":     tokenType.ELSE,
+    "return":   tokenType.RETURN,
 }
 
 export class Lexer {
@@ -49,10 +68,46 @@ export class Lexer {
 
         switch (this.ch) {
             case "=":
-                token = this.newToken(tokenType.ASSIGN, this.ch);
+                if (this.peekChar() === "=") {
+                    const ch = this.ch;
+                    this.readChar();
+                    token = this.newToken(tokenType.EQ, ch + this.ch);
+                } else {
+                    token = this.newToken(tokenType.ASSIGN, this.ch);
+                }
+                break;
+            case "+":
+                token = this.newToken(tokenType.PLUS, this.ch);
+                break;
+            case "-":
+                token = this.newToken(tokenType.MINUS, this.ch);
+                break;
+            case "!":
+                if (this.peekChar() === "=") {
+                    const ch = this.ch;
+                    this.readChar();
+                    token = this.newToken(tokenType.NOT_EQ, ch + this.ch);
+                } else {
+                    token = this.newToken(tokenType.BANG, this.ch);
+                }
+                break;
+            case "/":
+                token = this.newToken(tokenType.SLASH, this.ch);
+                break;
+            case "*":
+                token = this.newToken(tokenType.ASTERISK, this.ch);
+                break;
+            case "<":
+                token = this.newToken(tokenType.LT, this.ch);
+                break;
+            case ">":
+                token = this.newToken(tokenType.GT, this.ch);
                 break;
             case ";":
                 token = this.newToken(tokenType.SEMICOLON, this.ch);
+                break;
+            case ",":
+                token = this.newToken(tokenType.COMMA, this.ch);
                 break;
             case "(":
                 token = this.newToken(tokenType.LPAREN, this.ch);
@@ -117,6 +172,14 @@ export class Lexer {
             this.readChar();
         }
         return this.input.slice(position, this.position);
+    }
+
+    private peekChar(): string {
+        if (this.readPosition >= this.input.length) {
+            return "\0";
+        } else {
+            return this.input[this.readPosition];
+        }
     }
 
     private newToken(tokenType: TokenType, ch: string): Token {
