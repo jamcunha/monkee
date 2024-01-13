@@ -34,7 +34,7 @@ export const tokenType = {
     RETURN:     "RETURN",
 } as const;
 
-type TokenType = typeof tokenType[keyof typeof tokenType];
+export type TokenType = typeof tokenType[keyof typeof tokenType];
 
 export type Token = {
     type: TokenType;
