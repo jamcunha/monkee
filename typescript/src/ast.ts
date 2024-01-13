@@ -1,4 +1,4 @@
-import { Token, tokenType } from "./lexer";
+import { Token } from "./lexer";
 
 interface AstNode {
     tokenLiteral(): string;
@@ -8,6 +8,19 @@ export class LetStatement implements AstNode {
     private token: Token;
     public name: Identifier | undefined = undefined;
     public value: Expression | undefined = undefined;
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+}
+
+export class ReturnStatement implements AstNode {
+    private token: Token;
+    public returnValue: Expression | undefined = undefined;
 
     constructor(token: Token) {
         this.token = token;
@@ -32,7 +45,7 @@ export class Identifier implements AstNode {
     }
 }
 
-export type Statement = LetStatement;
+export type Statement = LetStatement | ReturnStatement;
 
 export type Expression = Identifier;
 

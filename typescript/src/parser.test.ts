@@ -46,3 +46,25 @@ let foobar = 838383;
         expect(letStmt.name!.value).toBe(tests[i]);
     }
 });
+
+test("Test `return` statements", () => {
+    const input = `
+return 5;
+return 10;
+return 993322;
+`;
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    expect(program).not.toBeUndefined();
+
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(3);
+
+    for (const stmt of program!.statements) {
+        expect(stmt.tokenLiteral()).toBe("return");
+    }
+});
