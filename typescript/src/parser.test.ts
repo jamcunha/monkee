@@ -1,4 +1,4 @@
-import { ExpressionStatement, Identifier, IntegerLiteral, LetStatement } from './ast';
+import { ExpressionStatement, Identifier, IntegerLiteral, LetStatement, PrefixExpression } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -82,8 +82,7 @@ test("Test identifier expression", () => {
     const stmt = program!.statements[0] as ExpressionStatement;
     expect(stmt.expression).not.toBeNull();
 
-    const ident = stmt.expression!;
-    expect(ident).toBeInstanceOf(Identifier);
+    const ident = stmt.expression! as Identifier;
     expect(ident.value).toBe("foobar");
     expect(ident.tokenLiteral()).toBe("foobar");
 });
@@ -103,8 +102,34 @@ test("Test integer literal expression", () => {
     const stmt = program!.statements[0] as ExpressionStatement;
     expect(stmt.expression).not.toBeNull();
 
-    const literal = stmt.expression!;
-    expect(literal).toBeInstanceOf(IntegerLiteral);
+    const literal = stmt.expression as IntegerLiteral;
     expect(literal.value).toBe(5);
     expect(literal.tokenLiteral()).toBe("5");
+});
+
+test("Test parsing prefix expressions", () => {
+    const prefixTests = [
+        ["!5;", "!", 5],
+        ["-15;", "-", 15],
+    ];
+
+    for (const [input, operator, value] of prefixTests) {
+        const lexer = new Lexer(input as string);
+        const parser = new Parser(lexer);
+
+        const program = parser.parseProgram();
+
+        checkParserErrors(parser);
+
+        expect(program!.statements.length).toBe(1);
+
+        const stmt = program!.statements[0] as ExpressionStatement;
+        expect(stmt.expression).not.toBeNull();
+
+        const exp = stmt.expression! as PrefixExpression;
+        expect(exp.operator).toBe(operator);
+        const right = exp.right! as IntegerLiteral;
+        expect(right.value).toBe(value);
+        expect(right.tokenLiteral()).toBe(String(value));
+    }
 });

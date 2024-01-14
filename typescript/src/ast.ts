@@ -111,9 +111,32 @@ export class IntegerLiteral implements AstNode {
     }
 }
 
+export class PrefixExpression implements AstNode {
+    private token: Token;
+    public operator: string;
+    public right: Expression | null = null;
+
+    constructor(token: Token) {
+        this.token = token;
+        this.operator = token.literal;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = "(";
+        out += this.operator;
+        out += this.right!.string();
+        out += ")";
+        return out;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
