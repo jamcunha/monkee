@@ -134,9 +134,35 @@ export class PrefixExpression implements AstNode {
     }
 }
 
+export class InfixExpression implements AstNode {
+    private token: Token;
+    public operator: string;
+    public left: Expression;
+    public right: Expression | null = null;
+
+    constructor(token: Token, left: Expression) {
+        this.token = token;
+        this.operator = token.literal;
+        this.left = left;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = "(";
+        out += this.left!.string();
+        out += ` ${this.operator} `;
+        out += this.right!.string();
+        out += ")";
+        return out;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
