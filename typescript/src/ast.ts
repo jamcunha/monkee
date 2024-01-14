@@ -7,8 +7,8 @@ interface AstNode {
 
 export class LetStatement implements AstNode {
     private token: Token;
-    public name: Identifier | undefined = undefined;
-    public value: Expression | undefined = undefined;
+    public name: Identifier | null = null;
+    public value: Expression | null = null;
 
     constructor(token: Token) {
         this.token = token;
@@ -21,7 +21,7 @@ export class LetStatement implements AstNode {
     string(): string {
         let out = `${this.tokenLiteral()} ${this.name!.string()} = `;
 
-        if (this.value !== undefined) {
+        if (this.value !== null) {
             out += this.value.string();
         }
 
@@ -32,7 +32,7 @@ export class LetStatement implements AstNode {
 
 export class ReturnStatement implements AstNode {
     private token: Token;
-    public returnValue: Expression | undefined = undefined;
+    public returnValue: Expression | null = null;
 
     constructor(token: Token) {
         this.token = token;
@@ -45,7 +45,7 @@ export class ReturnStatement implements AstNode {
     string(): string {
         let out = `${this.tokenLiteral()} `;
 
-        if (this.returnValue !== undefined) {
+        if (this.returnValue !== null) {
             out += this.returnValue.string();
         }
 
@@ -56,7 +56,7 @@ export class ReturnStatement implements AstNode {
 
 export class ExpressionStatement implements AstNode {
     private token: Token;
-    public expression: Expression | undefined = undefined;
+    public expression: Expression | null = null;
 
     constructor(token: Token) {
         this.token = token;
@@ -67,7 +67,7 @@ export class ExpressionStatement implements AstNode {
     }
 
     string(): string {
-        if (this.expression !== undefined) {
+        if (this.expression !== null) {
             return this.expression.string();
         }
 

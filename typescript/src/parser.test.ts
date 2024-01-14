@@ -1,4 +1,4 @@
-import { LetStatement } from './ast';
+import { ExpressionStatement, Identifier, LetStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -25,7 +25,6 @@ let foobar = 838383;
     const parser = new Parser(lexer);
 
     const program = parser.parseProgram();
-    expect(program).not.toBeUndefined();
 
     checkParserErrors(parser);
 
@@ -58,7 +57,6 @@ return 993322;
     const parser = new Parser(lexer);
 
     const program = parser.parseProgram();
-    expect(program).not.toBeUndefined();
 
     checkParserErrors(parser);
 
@@ -67,4 +65,25 @@ return 993322;
     for (const stmt of program!.statements) {
         expect(stmt.tokenLiteral()).toBe("return");
     }
+});
+
+test("Test identifier expression", () => {
+    const input = "foobar;";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt.expression).not.toBeNull();
+
+    const ident = stmt.expression!;
+    expect(ident).toBeInstanceOf(Identifier);
+    expect(ident.value).toBe("foobar");
+    expect(ident.tokenLiteral()).toBe("foobar");
 });
