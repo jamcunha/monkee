@@ -93,9 +93,27 @@ export class Identifier implements AstNode {
     }
 }
 
+export class IntegerLiteral implements AstNode {
+    private token: Token;
+    public value: number;
+
+    constructor(token: Token) {
+        this.token = token;
+        this.value = Number(token.literal);
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return this.token.literal;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier;
+export type Expression = Identifier | IntegerLiteral;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];

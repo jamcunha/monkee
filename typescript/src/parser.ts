@@ -1,4 +1,4 @@
-import { Expression, ExpressionStatement, Identifier, LetStatement, Program, ReturnStatement, Statement } from "./ast";
+import { Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, Program, ReturnStatement, Statement } from "./ast";
 import { Lexer, Token, TokenType, tokenType } from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -29,6 +29,7 @@ export class Parser {
         this.peekToken = this.lexer.nextToken();
 
         this.registerPrefix(tokenType.IDENT, this.parseIdentifier.bind(this));
+        this.registerPrefix(tokenType.INT, this.parseIntegerLiteral.bind(this));
     }
 
     public parseProgram(): Program {
@@ -143,5 +144,9 @@ export class Parser {
 
     private parseIdentifier(): Identifier {
         return new Identifier(this.curToken);
+    }
+
+    private parseIntegerLiteral(): IntegerLiteral {
+        return new IntegerLiteral(this.curToken);
     }
 }
