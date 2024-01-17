@@ -148,8 +148,10 @@ export class Parser {
             return null;
         }
 
-        // TODO: Skip expression until semicolon
-        while (this.curToken.type !== tokenType.SEMICOLON) {
+        this.nextToken();
+        stmt.value = this.parseExpression(Precedence.LOWEST);
+
+        if (this.peekToken.type === tokenType.SEMICOLON) {
             this.nextToken();
         }
 
@@ -161,8 +163,9 @@ export class Parser {
 
         this.nextToken();
 
-        // TODO: Skip expression until semicolon
-        while (this.curToken.type !== tokenType.SEMICOLON) {
+        stmt.returnValue = this.parseExpression(Precedence.LOWEST);
+
+        if (this.peekToken.type === tokenType.SEMICOLON) {
             this.nextToken();
         }
 

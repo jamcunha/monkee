@@ -55,56 +55,51 @@ function testInfixExpression(exp: Expression, left: any, operator: string, right
 }
 
 test("Test `let` statements", () => {
-    const input = `
-let x = 5;
-let y = 10;
-let foobar = 838383;
-`;
-
-    const lexer = new Lexer(input);
-    const parser = new Parser(lexer);
-
-    const program = parser.parseProgram();
-
-    checkParserErrors(parser);
-
-    expect(program!.statements.length).toBe(3);
-
     const tests = [
-        "x",
-        "y",
-        "foobar",
-    ];
+        ["let x = 5;", "x", 5],
+        ["let y = true;", "y", true],
+        ["let foobar = y;", "foobar", "y"],
+    ]
 
-    for (let i = 0; i < tests.length; i++) {
-        const stmt = program!.statements[i];
+    for (const [input, expectedIdentifier, expectedValue] of tests) {
+        const lexer = new Lexer(input as string);
+        const parser = new Parser(lexer);
+
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        expect(program!.statements.length).toBe(1);
+
+        const stmt = program!.statements[0] as LetStatement;
         expect(stmt).toBeInstanceOf(LetStatement);
-        expect(stmt.tokenLiteral()).toBe("let");
+        expect(stmt.name!.value).toBe(expectedIdentifier);
+        expect(stmt.name!.tokenLiteral()).toBe(expectedIdentifier);
 
-        const letStmt = stmt as LetStatement;
-        testLiteralExpression(letStmt.name!, tests[i]);
+        testLiteralExpression(stmt.value!, expectedValue);
     }
 });
 
 test("Test `return` statements", () => {
-    const input = `
-return 5;
-return 10;
-return 993322;
-`;
+    const tests = [
+        ["return 5;", 5],
+        ["return true;", true],
+        ["return foobar;", "foobar"],
+    ];
 
-    const lexer = new Lexer(input);
-    const parser = new Parser(lexer);
+    for (const [input, expectedValue] of tests) {
+        const lexer = new Lexer(input as string);
+        const parser = new Parser(lexer);
 
-    const program = parser.parseProgram();
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
 
-    checkParserErrors(parser);
+        expect(program!.statements.length).toBe(1);
 
-    expect(program!.statements.length).toBe(3);
-
-    for (const stmt of program!.statements) {
+        const stmt = program!.statements[0] as ReturnStatement;
         expect(stmt).toBeInstanceOf(ReturnStatement);
         expect(stmt.tokenLiteral()).toBe("return");
+
+        testLiteralExpression(stmt.returnValue!, expectedValue);
     }
 });
 
