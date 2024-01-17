@@ -1,4 +1,4 @@
-import { BooleanLiteral, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
+import { BooleanLiteral, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -268,4 +268,60 @@ test("Test operator precedence parsing", () => {
 
         expect(program!.string()).toBe(expected);
     }
+});
+
+test("Test if expression", () => {
+    const input = "if (x < y) { x }";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+    const exp = stmt.expression! as IfExpression;
+    expect(exp).toBeInstanceOf(IfExpression);
+
+    testInfixExpression(exp.condition!, "x", "<", "y");
+
+    expect(exp.consequence!.statements.length).toBe(1);
+    const consequence = exp.consequence!.statements[0] as ExpressionStatement;
+    expect(consequence).toBeInstanceOf(ExpressionStatement);
+    testIdentifier(consequence.expression!, "x");
+    expect(exp.alternative).toBeNull();
+});
+
+test("Test if else expression", () => {
+    const input = "if (x < y) { x } else { y }";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+    const exp = stmt.expression! as IfExpression;
+    expect(exp).toBeInstanceOf(IfExpression);
+
+    testInfixExpression(exp.condition!, "x", "<", "y");
+
+    expect(exp.consequence!.statements.length).toBe(1);
+    const consequence = exp.consequence!.statements[0] as ExpressionStatement;
+    expect(consequence).toBeInstanceOf(ExpressionStatement);
+    testIdentifier(consequence.expression!, "x");
+
+    expect(exp.alternative!.statements.length).toBe(1);
+    const alternative = exp.alternative!.statements[0] as ExpressionStatement;
+    expect(alternative).toBeInstanceOf(ExpressionStatement);
+    testIdentifier(alternative.expression!, "y");
 });

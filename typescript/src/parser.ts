@@ -1,4 +1,4 @@
-import { BooleanLiteral, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
+import { BlockStatement, BooleanLiteral, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
 import { Lexer, Token, TokenType, tokenType } from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -47,6 +47,7 @@ export class Parser {
         this.registerPrefix(tokenType.TRUE, this.parseBoolean.bind(this));
         this.registerPrefix(tokenType.FALSE, this.parseBoolean.bind(this));
         this.registerPrefix(tokenType.LPAREN, this.parseGroupedExpression.bind(this));
+        this.registerPrefix(tokenType.IF, this.parseIfExpression.bind(this));
 
         this.registerInfix(tokenType.PLUS, this.parseInfixExpression.bind(this));
         this.registerInfix(tokenType.MINUS, this.parseInfixExpression.bind(this));
@@ -243,5 +244,54 @@ export class Parser {
         }
 
         return exp;
+    }
+
+    private parseIfExpression(): IfExpression | null {
+        const expression = new IfExpression(this.curToken);
+
+        if (!this.expectPeek(tokenType.LPAREN)) {
+            return null;
+        }
+
+        this.nextToken();
+        expression.condition = this.parseExpression(Precedence.LOWEST);
+
+        if (!this.expectPeek(tokenType.RPAREN)) {
+            return null;
+        }
+
+        if (!this.expectPeek(tokenType.LBRACE)) {
+            return null;
+        }
+
+        expression.consequence = this.parseBlockStatement();
+
+        if (this.peekToken.type === tokenType.ELSE) {
+            this.nextToken();
+
+            if (!this.expectPeek(tokenType.LBRACE)) {
+                return expression;
+            }
+
+            expression.alternative = this.parseBlockStatement();
+        }
+
+        return expression;
+    }
+
+    private parseBlockStatement(): BlockStatement {
+        const block = new BlockStatement(this.curToken);
+
+        this.nextToken();
+
+        while (this.curToken.type !== tokenType.RBRACE && this.curToken.type !== tokenType.EOF) {
+            const stmt = this.parseStatement();
+            if (stmt !== null) {
+                block.statements.push(stmt);
+            }
+            this.nextToken();
+        }
+
+        return block;
     }
 }

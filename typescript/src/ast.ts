@@ -178,9 +178,51 @@ export class BooleanLiteral implements AstNode {
     }
 }
 
+export class BlockStatement implements AstNode {
+    private token: Token;
+    public statements: Statement[] = [];
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return this.statements.map((s) => s.string()).join("");
+    }
+}
+
+export class IfExpression implements AstNode {
+    private token: Token;
+    public condition: Expression | null = null;
+    public consequence: BlockStatement | null = null;
+    public alternative: BlockStatement | null = null;
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = `if ${this.condition!.string()} ${this.consequence!.string()}`;
+
+        if (this.alternative !== null) {
+            out += `else ${this.alternative!.string()}`;
+        }
+
+        return out;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
