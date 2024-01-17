@@ -1,4 +1,4 @@
-import { Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
+import { BooleanLiteral, Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -14,13 +14,6 @@ function checkParserErrors(parser: Parser): void {
     throw new Error("parser has " + parser.errors.length + " errors");
 }
 
-function testIntegerLiteral(exp: Expression, value: number): void {
-    expect(exp).toBeInstanceOf(IntegerLiteral);
-    const int = exp as IntegerLiteral;
-    expect(int.value).toBe(value);
-    expect(int.tokenLiteral()).toBe(String(value));
-}
-
 function testIdentifier(exp: Expression, value: string): void {
     expect(exp).toBeInstanceOf(Identifier);
     const ident = exp as Identifier;
@@ -28,11 +21,27 @@ function testIdentifier(exp: Expression, value: string): void {
     expect(ident.tokenLiteral()).toBe(value);
 }
 
+function testIntegerLiteral(exp: Expression, value: number): void {
+    expect(exp).toBeInstanceOf(IntegerLiteral);
+    const int = exp as IntegerLiteral;
+    expect(int.value).toBe(value);
+    expect(int.tokenLiteral()).toBe(String(value));
+}
+
+function testBooleanLiteral(exp: Expression, value: boolean): void {
+    expect(exp).toBeInstanceOf(BooleanLiteral);
+    const bool = exp as BooleanLiteral;
+    expect(bool.value).toBe(value);
+    expect(bool.tokenLiteral()).toBe(value ? "true" : "false");
+}
+
 function testLiteralExpression(exp: Expression, expected: any): void {
     if (typeof expected === "number") {
         testIntegerLiteral(exp, expected);
     } else if (typeof expected === "string") {
         testIdentifier(exp, expected);
+    } else if (typeof expected === "boolean") {
+        testBooleanLiteral(exp, expected);
     }
 }
 
@@ -115,8 +124,7 @@ test("Test identifier expression", () => {
     expect(stmt).toBeInstanceOf(ExpressionStatement);
     expect(stmt.expression).not.toBeNull();
 
-    const ident = stmt.expression! as Identifier;
-    testLiteralExpression(ident, "foobar");
+    testLiteralExpression(stmt.expression!, "foobar");
 });
 
 test("Test integer literal expression", () => {
@@ -135,14 +143,39 @@ test("Test integer literal expression", () => {
     expect(stmt).toBeInstanceOf(ExpressionStatement);
     expect(stmt.expression).not.toBeNull();
 
-    const literal = stmt.expression as IntegerLiteral;
-    testLiteralExpression(literal, 5);
+    testLiteralExpression(stmt.expression!, 5);
+});
+
+test("Test boolean expression", () => {
+    const tests = [
+        ["true;", true],
+        ["false;", false],
+    ];
+
+    for (const [input, expected] of tests) {
+        const lexer = new Lexer(input as string);
+        const parser = new Parser(lexer);
+
+        const program = parser.parseProgram();
+
+        checkParserErrors(parser);
+
+        expect(program!.statements.length).toBe(1);
+
+        const stmt = program!.statements[0] as ExpressionStatement;
+        expect(stmt).toBeInstanceOf(ExpressionStatement);
+        expect(stmt.expression).not.toBeNull();
+
+        testLiteralExpression(stmt.expression!, expected);
+    }
 });
 
 test("Test parsing prefix expressions", () => {
     const prefixTests = [
         ["!5;", "!", 5],
         ["-15;", "-", 15],
+        ["!true;", "!", true],
+        ["!false;", "!", false],
     ];
 
     for (const [input, operator, value] of prefixTests) {
@@ -163,8 +196,7 @@ test("Test parsing prefix expressions", () => {
         expect(exp).toBeInstanceOf(PrefixExpression);
         expect(exp.operator).toBe(operator);
 
-        const right = exp.right! as IntegerLiteral;
-        testLiteralExpression(right, value);
+        testLiteralExpression(exp.right!, value);
     }
 });
 
@@ -178,6 +210,9 @@ test("Test parsing infix expressions", () => {
         ["5 < 5;", 5, "<", 5],
         ["5 == 5;", 5, "==", 5],
         ["5 != 5;", 5, "!=", 5],
+        ["true == true", true, "==", true],
+        ["true != false", true, "!=", false],
+        ["false == false", false, "==", false],
     ];
 
     for (const [input, leftValue, operator, rightValue] of infixTests) {
@@ -212,6 +247,10 @@ test("Test operator precedence parsing", () => {
         ["5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"],
         ["5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"],
         ["3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"],
+        ["true", "true"],
+        ["false", "false"],
+        ["3 > 5 == false", "((3 > 5) == false)"],
+        ["3 < 5 == true", "((3 < 5) == true)"],
     ];
 
     for (const [input, expected] of tests) {

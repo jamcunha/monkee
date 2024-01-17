@@ -160,9 +160,27 @@ export class InfixExpression implements AstNode {
     }
 }
 
+export class BooleanLiteral implements AstNode {
+    private token: Token;
+    public value: boolean;
+
+    constructor(token: Token) {
+        this.token = token;
+        this.value = token.literal === "true"; // TODO: This is a bit hacky
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return this.token.literal;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
