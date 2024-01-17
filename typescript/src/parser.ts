@@ -1,4 +1,4 @@
-import { BlockStatement, BooleanLiteral, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
+import { BlockStatement, BooleanLiteral, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
 import { Lexer, Token, TokenType, tokenType } from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -48,6 +48,7 @@ export class Parser {
         this.registerPrefix(tokenType.FALSE, this.parseBoolean.bind(this));
         this.registerPrefix(tokenType.LPAREN, this.parseGroupedExpression.bind(this));
         this.registerPrefix(tokenType.IF, this.parseIfExpression.bind(this));
+        this.registerPrefix(tokenType.FUNCTION, this.parseFunctionLiteral.bind(this));
 
         this.registerInfix(tokenType.PLUS, this.parseInfixExpression.bind(this));
         this.registerInfix(tokenType.MINUS, this.parseInfixExpression.bind(this));
@@ -293,5 +294,50 @@ export class Parser {
         }
 
         return block;
+    }
+
+    private parseFunctionLiteral(): FunctionLiteral | null {
+        const lit = new FunctionLiteral(this.curToken);
+
+        if (!this.expectPeek(tokenType.LPAREN)) {
+            return null;
+        }
+
+        lit.parameters = this.parseFunctionParameters();
+
+        if (!this.expectPeek(tokenType.LBRACE)) {
+            return null;
+        }
+
+        lit.body = this.parseBlockStatement();
+
+        return lit;
+    }
+
+    private parseFunctionParameters(): Identifier[] {
+        const identifiers: Identifier[] = [];
+
+        if (this.peekToken.type === tokenType.RPAREN) {
+            this.nextToken();
+            return identifiers;
+        }
+
+        this.nextToken();
+
+        const ident = new Identifier(this.curToken);
+        identifiers.push(ident);
+
+        while (this.peekToken.type === tokenType.COMMA) {
+            this.nextToken();
+            this.nextToken();
+            const ident = new Identifier(this.curToken);
+            identifiers.push(ident);
+        }
+
+        if (!this.expectPeek(tokenType.RPAREN)) {
+            return [];
+        }
+
+        return identifiers;
     }
 }

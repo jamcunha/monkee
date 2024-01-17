@@ -220,9 +220,30 @@ export class IfExpression implements AstNode {
     }
 }
 
+export class FunctionLiteral implements AstNode {
+    private token: Token;
+    public parameters: Identifier[] = [];
+    public body: BlockStatement | null = null;
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = `${this.tokenLiteral()}(`;
+        out += this.parameters.map((p) => p.string()).join(", ");
+        out += `) ${this.body!.string()}`;
+        return out;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression | FunctionLiteral;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];

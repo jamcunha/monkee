@@ -1,4 +1,4 @@
-import { BooleanLiteral, Expression, ExpressionStatement, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
+import { BooleanLiteral, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -324,4 +324,59 @@ test("Test if else expression", () => {
     const alternative = exp.alternative!.statements[0] as ExpressionStatement;
     expect(alternative).toBeInstanceOf(ExpressionStatement);
     testIdentifier(alternative.expression!, "y");
+});
+
+test("Test function literal parsing", () => {
+    const input = "fn(x, y) { x + y; }";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+    const func = stmt.expression! as FunctionLiteral;
+    expect(func).toBeInstanceOf(FunctionLiteral);
+
+    expect(func.parameters.length).toBe(2);
+    testLiteralExpression(func.parameters[0], "x");
+    testLiteralExpression(func.parameters[1], "y");
+
+    expect(func.body!.statements.length).toBe(1);
+    const bodyStmt = func.body!.statements[0] as ExpressionStatement;
+    expect(bodyStmt).toBeInstanceOf(ExpressionStatement);
+    testInfixExpression(bodyStmt.expression!, "x", "+", "y");
+});
+
+test("Test function parameter parsing", () => {
+    const tests = [
+        ["fn() {};", []],
+        ["fn(x) {};", ["x"]],
+        ["fn(x, y, z) {};", ["x", "y", "z"]],
+    ];
+
+    for (const [input, expected] of tests) {
+        const lexer = new Lexer(input as string);
+        const parser = new Parser(lexer);
+
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        const stmt = program!.statements[0] as ExpressionStatement;
+        expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+        const func = stmt.expression! as FunctionLiteral;
+        expect(func).toBeInstanceOf(FunctionLiteral);
+
+        expect(func.parameters.length).toBe(expected.length);
+
+        for (let i = 0; i < expected.length; i++) {
+            testLiteralExpression(func.parameters[i], expected[i]);
+        }
+    }
 });
