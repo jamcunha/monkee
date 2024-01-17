@@ -166,7 +166,7 @@ export class BooleanLiteral implements AstNode {
 
     constructor(token: Token) {
         this.token = token;
-        this.value = token.literal === "true"; // TODO: This is a bit hacky
+        this.value = token.literal === "true";
     }
 
     tokenLiteral(): string {
@@ -241,9 +241,31 @@ export class FunctionLiteral implements AstNode {
     }
 }
 
+export class CallExpression implements AstNode {
+    private token: Token;
+    public function: Expression;
+    public arguments: Expression[] = [];
+
+    constructor(token: Token, func: Expression) {
+        this.token = token;
+        this.function = func;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = `${this.function!.string()}(`;
+        out += this.arguments.map((a) => a.string()).join(", ");
+        out += ")";
+        return out;
+    }
+}
+
 export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression | FunctionLiteral;
+export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression | FunctionLiteral | CallExpression;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];

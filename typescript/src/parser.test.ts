@@ -1,4 +1,4 @@
-import { BooleanLiteral, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
+import { BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -256,6 +256,9 @@ test("Test operator precedence parsing", () => {
         ["2 / (5 + 5)", "(2 / (5 + 5))"],
         ["-(5 + 5)", "(-(5 + 5))"],
         ["!(true == true)", "(!(true == true))"],
+        ["a + add(b * c) + d", "((a + add((b * c))) + d)"],
+        ["add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"],
+        ["add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"],
     ];
 
     for (const [input, expected] of tests) {
@@ -379,4 +382,29 @@ test("Test function parameter parsing", () => {
             testLiteralExpression(func.parameters[i], expected[i]);
         }
     }
+});
+
+test("Test call expression parsing", () => {
+    const input = "add(1, 2 * 3, 4 + 5);";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+    const exp = stmt.expression! as CallExpression;
+    expect(exp).toBeInstanceOf(CallExpression);
+
+    testIdentifier(exp.function!, "add");
+
+    expect(exp.arguments.length).toBe(3);
+    testLiteralExpression(exp.arguments[0], 1);
+    testInfixExpression(exp.arguments[1], 2, "*", 3);
+    testInfixExpression(exp.arguments[2], 4, "+", 5);
 });

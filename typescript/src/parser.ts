@@ -1,4 +1,4 @@
-import { BlockStatement, BooleanLiteral, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
+import { BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
 import { Lexer, Token, TokenType, tokenType } from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -58,6 +58,7 @@ export class Parser {
         this.registerInfix(tokenType.NOT_EQ, this.parseInfixExpression.bind(this));
         this.registerInfix(tokenType.LT, this.parseInfixExpression.bind(this));
         this.registerInfix(tokenType.GT, this.parseInfixExpression.bind(this));
+        this.registerInfix(tokenType.LPAREN, this.parseCallExpression.bind(this));
     }
 
     public parseProgram(): Program {
@@ -339,5 +340,35 @@ export class Parser {
         }
 
         return identifiers;
+    }
+
+    private parseCallExpression(func: Expression): CallExpression {
+        const exp = new CallExpression(this.curToken, func);
+        exp.arguments = this.parseCallArguments();
+        return exp;
+    }
+
+    private parseCallArguments(): Expression[] {
+        const args: Expression[] = [];
+
+        if (this.peekToken.type === tokenType.RPAREN) {
+            this.nextToken();
+            return args;
+        }
+
+        this.nextToken();
+        args.push(this.parseExpression(Precedence.LOWEST)!);
+
+        while (this.peekToken.type === tokenType.COMMA) {
+            this.nextToken();
+            this.nextToken();
+            args.push(this.parseExpression(Precedence.LOWEST)!);
+        }
+
+        if (!this.expectPeek(tokenType.RPAREN)) {
+            return [];
+        }
+
+        return args;
     }
 }
