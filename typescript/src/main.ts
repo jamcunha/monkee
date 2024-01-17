@@ -1,4 +1,6 @@
-import { startRepl } from './repl';
+import { startRppl } from './repl';
 
-console.log("Starting REPL...")
-startRepl();
+// TODO: add a cli to choose between RLPL, RPPl and REPL
+
+console.log("Starting RPPL...")
+startRppl();
