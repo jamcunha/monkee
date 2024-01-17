@@ -1,4 +1,4 @@
-import { ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
+import { Expression, ExpressionStatement, Identifier, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
 
@@ -12,6 +12,37 @@ function checkParserErrors(parser: Parser): void {
     }
 
     throw new Error("parser has " + parser.errors.length + " errors");
+}
+
+function testIntegerLiteral(exp: Expression, value: number): void {
+    expect(exp).toBeInstanceOf(IntegerLiteral);
+    const int = exp as IntegerLiteral;
+    expect(int.value).toBe(value);
+    expect(int.tokenLiteral()).toBe(String(value));
+}
+
+function testIdentifier(exp: Expression, value: string): void {
+    expect(exp).toBeInstanceOf(Identifier);
+    const ident = exp as Identifier;
+    expect(ident.value).toBe(value);
+    expect(ident.tokenLiteral()).toBe(value);
+}
+
+function testLiteralExpression(exp: Expression, expected: any): void {
+    if (typeof expected === "number") {
+        testIntegerLiteral(exp, expected);
+    } else if (typeof expected === "string") {
+        testIdentifier(exp, expected);
+    }
+}
+
+function testInfixExpression(exp: Expression, left: any, operator: string, right: any): void {
+    expect(exp).toBeInstanceOf(InfixExpression);
+    const opExp = exp as InfixExpression;
+
+    testLiteralExpression(opExp.left, left);
+    expect(opExp.operator).toBe(operator);
+    testLiteralExpression(opExp.right!, right);
 }
 
 test("Test `let` statements", () => {
@@ -42,9 +73,7 @@ let foobar = 838383;
         expect(stmt.tokenLiteral()).toBe("let");
 
         const letStmt = stmt as LetStatement;
-        expect(letStmt.name).toBeInstanceOf(Identifier);
-        expect(letStmt.name!.tokenLiteral()).toBe(tests[i]);
-        expect(letStmt.name!.value).toBe(tests[i]);
+        testLiteralExpression(letStmt.name!, tests[i]);
     }
 });
 
@@ -87,9 +116,7 @@ test("Test identifier expression", () => {
     expect(stmt.expression).not.toBeNull();
 
     const ident = stmt.expression! as Identifier;
-    expect(ident).toBeInstanceOf(Identifier);
-    expect(ident.value).toBe("foobar");
-    expect(ident.tokenLiteral()).toBe("foobar");
+    testLiteralExpression(ident, "foobar");
 });
 
 test("Test integer literal expression", () => {
@@ -109,9 +136,7 @@ test("Test integer literal expression", () => {
     expect(stmt.expression).not.toBeNull();
 
     const literal = stmt.expression as IntegerLiteral;
-    expect(literal).toBeInstanceOf(IntegerLiteral);
-    expect(literal.value).toBe(5);
-    expect(literal.tokenLiteral()).toBe("5");
+    testLiteralExpression(literal, 5);
 });
 
 test("Test parsing prefix expressions", () => {
@@ -137,10 +162,9 @@ test("Test parsing prefix expressions", () => {
         const exp = stmt.expression! as PrefixExpression;
         expect(exp).toBeInstanceOf(PrefixExpression);
         expect(exp.operator).toBe(operator);
+
         const right = exp.right! as IntegerLiteral;
-        expect(right).toBeInstanceOf(IntegerLiteral);
-        expect(right.value).toBe(value);
-        expect(right.tokenLiteral()).toBe(String(value));
+        testLiteralExpression(right, value);
     }
 });
 
@@ -170,19 +194,7 @@ test("Test parsing infix expressions", () => {
         expect(stmt).toBeInstanceOf(ExpressionStatement);
         expect(stmt.expression).not.toBeNull();
 
-        const exp = stmt.expression! as InfixExpression;
-        expect(exp).toBeInstanceOf(InfixExpression);
-        expect(exp.operator).toBe(operator);
-
-        const left = exp.left! as IntegerLiteral;
-        expect(left).toBeInstanceOf(IntegerLiteral);
-        expect(left.value).toBe(leftValue);
-        expect(left.tokenLiteral()).toBe(String(leftValue));
-
-        const right = exp.right! as IntegerLiteral;
-        expect(right).toBeInstanceOf(IntegerLiteral);
-        expect(right.value).toBe(rightValue);
-        expect(right.tokenLiteral()).toBe(String(rightValue));
+        testInfixExpression(stmt.expression!, leftValue, operator as string, rightValue);
     }
 });
 
