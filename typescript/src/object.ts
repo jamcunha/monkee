@@ -3,6 +3,7 @@ const enum ObjectType {
     BOOLEAN_OBJ         = 'BOOLEAN',
     NULL_OBJ            = 'NULL',
     RETURN_VALUE_OBJ    = 'RETURN_VALUE',
+    ERROR_OBJ           = 'ERROR',
 }
 
 export class IntegerType {
@@ -51,4 +52,16 @@ export class ReturnValue {
     }
 }
 
-export type Object = IntegerType | BooleanType | NullType | ReturnValue;
+export class ErrorType {
+    constructor(public message: string) {}
+
+    public Inspect(): string {
+        return this.message;
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.ERROR_OBJ;
+    }
+}
+
+export type Object = IntegerType | BooleanType | NullType | ReturnValue | ErrorType;
