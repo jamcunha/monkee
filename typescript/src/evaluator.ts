@@ -1,4 +1,4 @@
-import { AstNode, BooleanLiteral, ExpressionStatement, InfixExpression, IntegerLiteral, PrefixExpression, Program } from './ast';
+import { AstNode, BlockStatement, BooleanLiteral, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program } from './ast';
 import { IntegerType, BooleanType, Object, NullType } from './object';
 
 const TRUE = new BooleanType(true);
@@ -18,6 +18,10 @@ export function evaluate(node: AstNode): Object | null {
             const ileft = evaluate((node as InfixExpression).left);
             const iright = evaluate((node as InfixExpression).right!);
             return evaluateInfixExpression((node as PrefixExpression).operator, ileft!, iright!);
+        case 'BlockStatement':
+            return evaluateStatements((node as BlockStatement).statements);
+        case 'IfExpression':
+            return evaluateIfExpression((node as IfExpression));
         case 'IntegerLiteral':
             return new IntegerType((node as IntegerLiteral).value);
         case 'BooleanLiteral':
@@ -111,5 +115,30 @@ function evaluateIntegerInfixExpression(operator: string, left: Object, right: O
             return nativeBoolToBooleanObject(leftVal !== rightVal);
         default:
             return null;
+    }
+}
+
+function evaluateIfExpression(exp: IfExpression): Object | null {
+    const condition = evaluate(exp.condition!);
+
+    if (isTruthy(condition!)) {
+        return evaluate(exp.consequence!);
+    } else if (exp.alternative) {
+        return evaluate(exp.alternative);
+    } else {
+        return NULL;
+    }
+}
+
+function isTruthy(obj: Object): boolean {
+    switch (obj) {
+        case NULL:
+            return false;
+        case TRUE:
+            return true;
+        case FALSE:
+            return false;
+        default:
+            return true;
     }
 }

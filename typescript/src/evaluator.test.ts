@@ -22,6 +22,11 @@ function testBooleanObject(obj: Object, expected: boolean): void {
     expect(obj.Inspect()).toBe(expected.toString());
 }
 
+function testNullObject(obj: Object): void {
+    expect(obj).not.toBeNull();
+    expect(obj.Type()).toBe("NULL");
+}
+
 test("Evaluate Integer Expression", () => {
     const tests = [
         ["5", 5],
@@ -89,5 +94,26 @@ test("Evaluate Bang Operator", () => {
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
         testBooleanObject(evaluated!, expected as boolean);
+    }
+});
+
+test("Evaluate If Else Expression", () => {
+    const tests = [
+        ["if (true) { 10 }", 10],
+        ["if (false) { 10 }", null],
+        ["if (1) { 10 }", 10],
+        ["if (1 < 2) { 10 }", 10],
+        ["if (1 > 2) { 10 }", null],
+        ["if (1 > 2) { 10 } else { 20 }", 20],
+        ["if (1 < 2) { 10 } else { 20 }", 10],
+    ];
+
+    for (const [input, expected] of tests) {
+        const evaluated = testEval(input as string);
+        if (expected !== null) {
+            testIntegerObject(evaluated!, expected as number);
+        } else {
+            testNullObject(evaluated!);
+        }
     }
 });
