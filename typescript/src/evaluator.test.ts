@@ -117,3 +117,18 @@ test("Evaluate If Else Expression", () => {
         }
     }
 });
+
+test("Evaluate Return Statement", () => {
+    const tests = [
+        ["return 10;", 10],
+        ["return 10; 9;", 10],
+        ["return 2 * 5; 9;", 10],
+        ["9; return 2 * 5; 9;", 10],
+        ["if (10 > 1) { if (10 > 1) { return 10; } return 1; }", 10],
+    ]
+
+    for (const [input, expected] of tests) {
+        const evaluated = testEval(input as string);
+        testIntegerObject(evaluated!, expected as number);
+    }
+});

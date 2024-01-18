@@ -1,5 +1,5 @@
-import { AstNode, BlockStatement, BooleanLiteral, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program } from './ast';
-import { IntegerType, BooleanType, Object, NullType } from './object';
+import { AstNode, BlockStatement, BooleanLiteral, ExpressionStatement, IfExpression, InfixExpression, IntegerLiteral, PrefixExpression, Program, ReturnStatement } from './ast';
+import { IntegerType, BooleanType, Object, NullType, ReturnValue } from './object';
 
 const TRUE = new BooleanType(true);
 const FALSE = new BooleanType(false);
@@ -8,7 +8,7 @@ const NULL = new NullType();
 export function evaluate(node: AstNode): Object | null {
     switch (node.constructor.name) {
         case 'Program':
-            return evaluateStatements((node as Program).statements);
+            return evaluateProgram((node as Program).statements);
         case 'ExpressionStatement':
             return evaluate((node as ExpressionStatement).expression!);
         case 'PrefixExpression':
@@ -19,9 +19,12 @@ export function evaluate(node: AstNode): Object | null {
             const iright = evaluate((node as InfixExpression).right!);
             return evaluateInfixExpression((node as PrefixExpression).operator, ileft!, iright!);
         case 'BlockStatement':
-            return evaluateStatements((node as BlockStatement).statements);
+            return evaluateBlockStatement((node as BlockStatement));
         case 'IfExpression':
             return evaluateIfExpression((node as IfExpression));
+        case 'ReturnStatement':
+            const val = evaluate((node as ReturnStatement).returnValue!);
+            return new ReturnValue(val!);
         case 'IntegerLiteral':
             return new IntegerType((node as IntegerLiteral).value);
         case 'BooleanLiteral':
@@ -31,11 +34,15 @@ export function evaluate(node: AstNode): Object | null {
     }
 }
 
-function evaluateStatements(statements: AstNode[]): Object | null {
+function evaluateProgram(statements: AstNode[]): Object | null {
     let result: Object | null = null;
 
     for (const statement of statements) {
         result = evaluate(statement);
+
+        if (result !== null && result.Type() === 'RETURN_VALUE') {
+            return (result as ReturnValue).value;
+        }
     }
 
     return result;
@@ -141,4 +148,18 @@ function isTruthy(obj: Object): boolean {
         default:
             return true;
     }
+}
+
+function evaluateBlockStatement(block: BlockStatement): Object | null {
+    let result: Object | null = null;
+
+    for (const statement of block.statements) {
+        result = evaluate(statement);
+
+        if (result !== null && result.Type() === 'RETURN_VALUE') {
+            return result;
+        }
+    }
+
+    return result;
 }

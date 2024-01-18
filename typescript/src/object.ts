@@ -1,7 +1,8 @@
 const enum ObjectType {
-    INTEGER_OBJ = 'INTEGER',
-    BOOLEAN_OBJ = 'BOOLEAN',
-    NULL_OBJ = 'NULL',
+    INTEGER_OBJ         = 'INTEGER',
+    BOOLEAN_OBJ         = 'BOOLEAN',
+    NULL_OBJ            = 'NULL',
+    RETURN_VALUE_OBJ    = 'RETURN_VALUE',
 }
 
 export class IntegerType {
@@ -38,4 +39,16 @@ export class NullType {
     }
 }
 
-export type Object = IntegerType | BooleanType | NullType;
+export class ReturnValue {
+    constructor(public value: Object) {}
+
+    public Inspect(): string {
+        return this.value.Inspect();
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.RETURN_VALUE_OBJ;
+    }
+}
+
+export type Object = IntegerType | BooleanType | NullType | ReturnValue;
