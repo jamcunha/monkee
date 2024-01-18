@@ -83,6 +83,8 @@ export function startRepl(): void {
         const evaluated = evaluate(program);
         if (evaluated !== null) {
             console.log(evaluated.Inspect());
+        } else {
+            console.log("null");
         }
 
         rl.prompt();
