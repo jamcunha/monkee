@@ -1,6 +1,7 @@
 import { Lexer, Token, tokenType } from "./lexer";
 import readline from "readline";
 import { Parser } from "./parser";
+import { evaluate } from "./evaluator";
 
 const PROMPT = ">> ";
 
@@ -54,6 +55,36 @@ export function startRppl(): void {
         }
 
         console.log(program.string());
+        rl.prompt();
+    }).on("close", () => {
+        process.exit(0);
+    });
+}
+
+export function startRepl(): void {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: PROMPT,
+    });
+
+    rl.prompt();
+
+    rl.on("line", (line) => {
+        const lexer = new Lexer(line);
+        const parser = new Parser(lexer);
+
+        const program = parser.parseProgram();
+        if (parser.errors.length !== 0) {
+            printParserErrors(parser.errors);
+            return;
+        }
+
+        const evaluated = evaluate(program);
+        if (evaluated !== null) {
+            console.log(evaluated.Inspect());
+        }
+
         rl.prompt();
     }).on("close", () => {
         process.exit(0);
