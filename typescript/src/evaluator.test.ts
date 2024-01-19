@@ -2,28 +2,28 @@ import { Lexer } from "./lexer";
 import { Parser } from "./parser";
 import { Object } from "./object";
 import { evaluate } from "./evaluator";
+import { Environment } from "./environment";
 
-function testEval(input: string): Object | null {
+function testEval(input: string): Object {
     const l = new Lexer(input);
     const p = new Parser(l);
     const program = p.parseProgram();
-    return evaluate(program);
+    const env = new Environment();
+
+    return evaluate(program, env);
 }
 
 function testIntegerObject(obj: Object, expected: number): void {
-    expect(obj).not.toBeNull();
     expect(obj.Type()).toBe("INTEGER");
     expect(obj.Inspect()).toBe(expected.toString());
 }
 
 function testBooleanObject(obj: Object, expected: boolean): void {
-    expect(obj).not.toBeNull();
     expect(obj.Type()).toBe("BOOLEAN");
     expect(obj.Inspect()).toBe(expected.toString());
 }
 
 function testNullObject(obj: Object): void {
-    expect(obj).not.toBeNull();
     expect(obj.Type()).toBe("NULL");
 }
 
@@ -48,7 +48,7 @@ test("Evaluate Integer Expression", () => {
 
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
-        testIntegerObject(evaluated!, expected as number);
+        testIntegerObject(evaluated, expected as number);
     }
 });
 
@@ -77,7 +77,7 @@ test("Evaluate Boolean Expression", () => {
 
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
-        testBooleanObject(evaluated!, expected as boolean);
+        testBooleanObject(evaluated, expected as boolean);
     }
 });
 
@@ -93,7 +93,7 @@ test("Evaluate Bang Operator", () => {
 
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
-        testBooleanObject(evaluated!, expected as boolean);
+        testBooleanObject(evaluated, expected as boolean);
     }
 });
 
@@ -111,9 +111,9 @@ test("Evaluate If Else Expression", () => {
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
         if (expected !== null) {
-            testIntegerObject(evaluated!, expected as number);
+            testIntegerObject(evaluated, expected as number);
         } else {
-            testNullObject(evaluated!);
+            testNullObject(evaluated);
         }
     }
 });
@@ -129,7 +129,7 @@ test("Evaluate Return Statement", () => {
 
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
-        testIntegerObject(evaluated!, expected as number);
+        testIntegerObject(evaluated, expected as number);
     }
 });
 
@@ -142,12 +142,25 @@ test("Error Handling", () => {
         ["5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"],
         ["if (10 > 1) { true + false; }", "unknown operator: BOOLEAN + BOOLEAN"],
         ["if (10 > 1) { if (10 > 1) { return true + false; } return 1; }", "unknown operator: BOOLEAN + BOOLEAN"],
+        ["foobar", "identifier not found: foobar"],
     ];
 
     for (const [input, expected] of tests) {
         const evaluated = testEval(input as string);
-        expect(evaluated).not.toBeNull();
-        expect(evaluated!.Type()).toBe("ERROR");
-        expect(evaluated!.Inspect()).toBe(expected as string);
+        expect(evaluated.Type()).toBe("ERROR");
+        expect(evaluated.Inspect()).toBe(expected as string);
+    }
+});
+
+test("Let Statements", () => {
+    const tests = [
+        ["let a = 5; a;", 5],
+        ["let a = 5 * 5; a;", 25],
+        ["let a = 5; let b = a; b;", 5],
+        ["let a = 5; let b = a; let c = a + b + 5; c;", 15],
+    ];
+
+    for (const [input, expected] of tests) {
+        testIntegerObject(testEval(input as string), expected as number);
     }
 });

@@ -2,6 +2,7 @@ import { Lexer, Token, tokenType } from "./lexer";
 import readline from "readline";
 import { Parser } from "./parser";
 import { evaluate } from "./evaluator";
+import { Environment } from "./environment";
 
 const PROMPT = ">> ";
 
@@ -70,6 +71,8 @@ export function startRepl(): void {
 
     rl.prompt();
 
+    const env = new Environment();
+
     rl.on("line", (line) => {
         const lexer = new Lexer(line);
         const parser = new Parser(lexer);
@@ -80,7 +83,7 @@ export function startRepl(): void {
             return;
         }
 
-        const evaluated = evaluate(program);
+        const evaluated = evaluate(program, env);
         if (evaluated !== null) {
             console.log(evaluated.Inspect());
         } else {
