@@ -1,6 +1,6 @@
-import { AstNode, BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement } from './ast';
-import { Environment } from './environment';
-import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType } from './object';
+import { AstNode, BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, StringLiteral } from "./ast";
+import { Environment } from "./environment";
+import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType, StringType } from "./object";
 
 const TRUE = new BooleanType(true);
 const FALSE = new BooleanType(false);
@@ -8,68 +8,70 @@ const NULL = new NullType();
 
 export function evaluate(node: AstNode, env: Environment): Object {
     switch (node.constructor.name) {
-        case 'Program':
+        case "Program":
             return evaluateProgram((node as Program).statements, env);
-        case 'ExpressionStatement':
+        case "ExpressionStatement":
             return evaluate((node as ExpressionStatement).expression!, env);
-        case 'PrefixExpression':
+        case "PrefixExpression":
             let pright = evaluate((node as PrefixExpression).right!, env);
-            if (pright.Type() === 'ERROR') {
+            if (pright.Type() === "ERROR") {
                 return pright;
             }
 
             return evaluatePrefixExpression((node as PrefixExpression).operator, pright!);
-        case 'InfixExpression':
+        case "InfixExpression":
             const ileft = evaluate((node as InfixExpression).left, env);
-            if (ileft.Type() === 'ERROR') {
+            if (ileft.Type() === "ERROR") {
                 return ileft;
             }
 
             const iright = evaluate((node as InfixExpression).right!, env);
-            if (iright.Type() === 'ERROR') {
+            if (iright.Type() === "ERROR") {
                 return iright;
             }
 
             return evaluateInfixExpression((node as PrefixExpression).operator, ileft!, iright!);
-        case 'BlockStatement':
+        case "BlockStatement":
             return evaluateBlockStatement((node as BlockStatement), env);
-        case 'IfExpression':
+        case "IfExpression":
             return evaluateIfExpression((node as IfExpression), env);
-        case 'LetStatement':
+        case "LetStatement":
             const letVal = evaluate((node as LetStatement).value!, env);
-            if (letVal.Type() === 'ERROR') {
+            if (letVal.Type() === "ERROR") {
                 return letVal;
             }
 
             return env.set((node as LetStatement).name!.value, letVal!);
-        case 'ReturnStatement':
+        case "ReturnStatement":
             const retVal = evaluate((node as ReturnStatement).returnValue!, env);
-            if (retVal.Type() === 'ERROR') {
+            if (retVal.Type() === "ERROR") {
                 return retVal;
             }
 
             return new ReturnValue(retVal!);
-        case 'FunctionLiteral':
+        case "FunctionLiteral":
             const params = (node as FunctionLiteral).parameters;
             const body = (node as FunctionLiteral).body!;
             return new FunctionType(params, body, env);
-        case 'CallExpression':
+        case "CallExpression":
             const func = evaluate((node as CallExpression).function!, env);
-            if (func.Type() === 'ERROR') {
+            if (func.Type() === "ERROR") {
                 return func;
             }
 
             const args = evaluateExpressions((node as CallExpression).arguments, env);
-            if (args.length === 1 && args[0].Type() === 'ERROR') {
+            if (args.length === 1 && args[0].Type() === "ERROR") {
                 return args[0];
             }
 
             return applyFunction(func, args);
-        case 'IntegerLiteral':
+        case "IntegerLiteral":
             return new IntegerType((node as IntegerLiteral).value);
-        case 'BooleanLiteral':
+        case "BooleanLiteral":
             return nativeBoolToBooleanObject((node as BooleanLiteral).value);
-        case 'Identifier':
+        case "StringLiteral":
+            return new StringType((node as StringLiteral).value);
+        case "Identifier":
             return evalutateIdentifier((node as Identifier), env);
         default:
             return NULL;
@@ -83,9 +85,9 @@ function evaluateProgram(statements: AstNode[], env: Environment): Object {
         result = evaluate(statement, env);
 
         switch (result?.Type()) {
-            case 'RETURN_VALUE':
+            case "RETURN_VALUE":
                 return (result as ReturnValue).value;
-            case 'ERROR':
+            case "ERROR":
                 return result;
         }
     }
@@ -99,9 +101,9 @@ function nativeBoolToBooleanObject(node: boolean): BooleanType {
 
 function evaluatePrefixExpression(operator: string, right: Object): Object {
     switch (operator) {
-        case '!':
+        case "!":
             return evaluateBangOperatorExpression(right);
-        case '-':
+        case "-":
             return evaluateMinusPrefixOperatorExpression(right);
         default:
             return NULL;
@@ -121,7 +123,7 @@ function evaluateBangOperatorExpression(right: Object): Object {
     }
 }
 function evaluateMinusPrefixOperatorExpression(right: Object): Object {
-    if (right.Type() !== 'INTEGER') {
+    if (right.Type() !== "INTEGER") {
         return new ErrorType(`unknown operator: -${right.Type()}`);
     }
 
@@ -130,13 +132,15 @@ function evaluateMinusPrefixOperatorExpression(right: Object): Object {
 }
 
 function evaluateInfixExpression(operator: string, left: Object, right: Object): Object {
-    if (left.Type() === 'INTEGER' && right.Type() === 'INTEGER') {
+    if (left.Type() === "INTEGER" && right.Type() === "INTEGER") {
         return evaluateIntegerInfixExpression(operator, left, right);
+    } else if (left.Type() === "STRING" && right.Type() === "STRING") {
+        return evaluateStringInfixExpression(operator, left, right);
     }
 
-    if (operator === '==') {
+    if (operator === "==") {
         return nativeBoolToBooleanObject(left === right);
-    } else if (operator === '!=') {
+    } else if (operator === "!=") {
         return nativeBoolToBooleanObject(left !== right);
     } else if (left.Type() !== right.Type()) {
         return new ErrorType(`type mismatch: ${left.Type()} ${operator} ${right.Type()}`);
@@ -150,31 +154,42 @@ function evaluateIntegerInfixExpression(operator: string, left: Object, right: O
     const rightVal = (right as IntegerType).value;
 
     switch (operator) {
-        case '+':
+        case "+":
             return new IntegerType(leftVal + rightVal);
-        case '-':
+        case "-":
             return new IntegerType(leftVal - rightVal);
-        case '*':
+        case "*":
             return new IntegerType(leftVal * rightVal);
-        case '/':
+        case "/":
             return new IntegerType(leftVal / rightVal);
-        case '<':
+        case "<":
             return nativeBoolToBooleanObject(leftVal < rightVal);
-        case '>':
+        case ">":
             return nativeBoolToBooleanObject(leftVal > rightVal);
-        case '==':
+        case "==":
             return nativeBoolToBooleanObject(leftVal === rightVal);
-        case '!=':
+        case "!=":
             return nativeBoolToBooleanObject(leftVal !== rightVal);
         default:
             return new ErrorType(`unknown operator: ${left.Type()} ${operator} ${right.Type()}`);
     }
 }
 
+function evaluateStringInfixExpression(operator: string, left: Object, right: Object): Object {
+    if (operator !== "+") {
+        return new ErrorType(`unknown operator: ${left.Type()} ${operator} ${right.Type()}`);
+    }
+
+    const leftVal = (left as StringType).value;
+    const rightVal = (right as StringType).value;
+
+    return new StringType(leftVal + rightVal);
+}
+
 function evaluateIfExpression(exp: IfExpression, env: Environment): Object {
     const condition = evaluate(exp.condition!, env);
 
-    if (condition?.Type() === 'ERROR') {
+    if (condition?.Type() === "ERROR") {
         return condition;
     }
 
@@ -206,7 +221,7 @@ function evaluateBlockStatement(block: BlockStatement, env: Environment): Object
     for (const statement of block.statements) {
         result = evaluate(statement, env);
 
-        if (result !== null && (result.Type() === 'RETURN_VALUE' || result.Type() === 'ERROR')) {
+        if (result !== null && (result.Type() === "RETURN_VALUE" || result.Type() === "ERROR")) {
             return result;
         }
     }
@@ -229,7 +244,7 @@ function evaluateExpressions(exps: Expression[], env: Environment): Object[] {
 
     for (const exp of exps) {
         const evaluated = evaluate(exp, env);
-        if (evaluated.Type() === 'ERROR') {
+        if (evaluated.Type() === "ERROR") {
             return [evaluated];
         }
 
@@ -240,7 +255,7 @@ function evaluateExpressions(exps: Expression[], env: Environment): Object[] {
 }
 
 function applyFunction(fn: Object, args: Object[]): Object {
-    if (fn.Type() !== 'FUNCTION') {
+    if (fn.Type() !== "FUNCTION") {
         return new ErrorType(`not a function: ${fn.Type()}`);
     }
 
@@ -263,7 +278,7 @@ function extendFunctionEnv(fn: FunctionType, args: Object[]): Environment {
 }
 
 function unwrapReturnValue(obj: Object): Object {
-    if (obj.Type() === 'RETURN_VALUE') {
+    if (obj.Type() === "RETURN_VALUE") {
         return (obj as ReturnValue).value;
     }
 

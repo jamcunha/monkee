@@ -4,7 +4,7 @@ import { FunctionType, Object } from "./object";
 import { evaluate } from "./evaluator";
 import { Environment } from "./environment";
 
-function testEval(input: string): Object {
+function testEvaluation(input: string): Object {
     const l = new Lexer(input);
     const p = new Parser(l);
     const program = p.parseProgram();
@@ -47,7 +47,7 @@ test("Evaluate Integer Expression", () => {
     ];
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         testIntegerObject(evaluated, expected);
     }
 });
@@ -76,7 +76,7 @@ test("Evaluate Boolean Expression", () => {
     ]
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         testBooleanObject(evaluated, expected);
     }
 });
@@ -92,7 +92,7 @@ test("Evaluate Bang Operator", () => {
     ];
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         testBooleanObject(evaluated, expected);
     }
 });
@@ -109,7 +109,7 @@ test("Evaluate If Else Expression", () => {
     ];
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         if (expected !== null) {
             testIntegerObject(evaluated, expected);
         } else {
@@ -128,7 +128,7 @@ test("Evaluate Return Statement", () => {
     ]
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         testIntegerObject(evaluated, expected);
     }
 });
@@ -143,10 +143,11 @@ test("Error Handling", () => {
         ["if (10 > 1) { true + false; }", "unknown operator: BOOLEAN + BOOLEAN"],
         ["if (10 > 1) { if (10 > 1) { return true + false; } return 1; }", "unknown operator: BOOLEAN + BOOLEAN"],
         ["foobar", "identifier not found: foobar"],
+        ["\"Hello\" - \"World\"", "unknown operator: STRING - STRING"],
     ];
 
     for (const [input, expected] of tests) {
-        const evaluated = testEval(input);
+        const evaluated = testEvaluation(input);
         expect(evaluated.Type()).toBe("ERROR");
         expect(evaluated.Inspect()).toBe(expected);
     }
@@ -161,14 +162,14 @@ test("Let Statements", () => {
     ];
 
     for (const [input, expected] of tests) {
-        testIntegerObject(testEval(input), expected);
+        testIntegerObject(testEvaluation(input), expected);
     }
 });
 
 test("Function Object", () => {
     const input = "fn(x) { x + 2; };";
 
-    const evaluated = testEval(input);
+    const evaluated = testEvaluation(input);
     expect(evaluated.Type()).toBe("FUNCTION");
     expect(evaluated.Inspect()).toBe("fn(x) {\n(x + 2)\n}");
     expect((evaluated as FunctionType).parameters.length).toBe(1);
@@ -187,7 +188,7 @@ test("Function Application", () => {
     ];
 
     for (const [input, expected] of tests) {
-        testIntegerObject(testEval(input), expected);
+        testIntegerObject(testEvaluation(input), expected);
     }
 });
 
@@ -201,5 +202,21 @@ test("Closures", () => {
         addTwo(2);
     `;
 
-    testIntegerObject(testEval(input), 4);
+    testIntegerObject(testEvaluation(input), 4);
+});
+
+test("String Literal", () => {
+    const input = "\"Hello World!\"";
+
+    const evaluated = testEvaluation(input);
+    expect(evaluated.Type()).toBe("STRING");
+    expect(evaluated.Inspect()).toBe("Hello World!");
+});
+
+test("String Concatenation", () => {
+    const input = "\"Hello\" + \" \" + \"World!\"";
+
+    const evaluated = testEvaluation(input);
+    expect(evaluated.Type()).toBe("STRING");
+    expect(evaluated.Inspect()).toBe("Hello World!");
 });

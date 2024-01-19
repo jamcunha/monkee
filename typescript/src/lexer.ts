@@ -4,6 +4,7 @@ export const tokenType = {
 
     IDENT:      "IDENT",
     INT:        "INT",
+    STRING:     "STRING",
 
     ASSIGN:     "=",
     PLUS:       "+",
@@ -127,6 +128,9 @@ export class Lexer {
             case "}":
                 token = this.newToken(tokenType.RBRACE, this.ch);
                 break;
+            case "\"":
+                token = this.newToken(tokenType.STRING, this.readString());
+                break;
             case "\0":
                 token = this.newToken(tokenType.EOF, "");
                 break;
@@ -171,6 +175,14 @@ export class Lexer {
         while (this.ch.match(/[a-zA-Z_]/)) {
             this.readChar();
         }
+        return this.input.slice(position, this.position);
+    }
+
+    private readString(): string {
+        const position = this.position + 1;
+        do {
+            this.readChar();
+        } while (this.ch !== "\"" && this.ch !== "\0");
         return this.input.slice(position, this.position);
     }
 

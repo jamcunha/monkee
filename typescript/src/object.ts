@@ -2,12 +2,13 @@ import { BlockStatement, Identifier } from "./ast";
 import { Environment } from "./environment";
 
 const enum ObjectType {
-    INTEGER_OBJ         = 'INTEGER',
-    BOOLEAN_OBJ         = 'BOOLEAN',
-    NULL_OBJ            = 'NULL',
-    RETURN_VALUE_OBJ    = 'RETURN_VALUE',
-    ERROR_OBJ           = 'ERROR',
-    FUNCTION_OBJ        = 'FUNCTION',
+    INTEGER_OBJ         = "INTEGER",
+    BOOLEAN_OBJ         = "BOOLEAN",
+    NULL_OBJ            = "NULL",
+    RETURN_VALUE_OBJ    = "RETURN_VALUE",
+    ERROR_OBJ           = "ERROR",
+    FUNCTION_OBJ        = "FUNCTION",
+    STRING_OBJ          = "STRING",
 }
 
 export class IntegerType {
@@ -36,7 +37,7 @@ export class BooleanType {
 
 export class NullType {
     public Inspect(): string {
-        return 'null';
+        return "null";
     }
 
     public Type(): ObjectType {
@@ -77,7 +78,7 @@ export class FunctionType {
             params.push(param.string());
         }
 
-        return `fn(${params.join(', ')}) {\n${this.body.string()}\n}`;
+        return `fn(${params.join(", ")}) {\n${this.body.string()}\n}`;
     }
 
     public Type(): ObjectType {
@@ -85,4 +86,23 @@ export class FunctionType {
     }
 }
 
-export type Object = IntegerType | BooleanType | NullType | ReturnValue | ErrorType | FunctionType;
+export class StringType {
+    constructor(public value: string) {}
+
+    public Inspect(): string {
+        return this.value;
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.STRING_OBJ;
+    }
+}
+
+export type Object =
+    IntegerType
+    | BooleanType
+    | NullType
+    | ReturnValue
+    | ErrorType
+    | FunctionType
+    | StringType;

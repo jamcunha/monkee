@@ -1,4 +1,4 @@
-import { BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement } from "./ast";
+import { BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, Statement, StringLiteral } from "./ast";
 import { Lexer, Token, TokenType, tokenType } from "./lexer";
 
 type PrefixParseFn = () => Expression | null;
@@ -49,6 +49,7 @@ export class Parser {
         this.registerPrefix(tokenType.LPAREN, this.parseGroupedExpression.bind(this));
         this.registerPrefix(tokenType.IF, this.parseIfExpression.bind(this));
         this.registerPrefix(tokenType.FUNCTION, this.parseFunctionLiteral.bind(this));
+        this.registerPrefix(tokenType.STRING, this.parseStringLiteral.bind(this));
 
         this.registerInfix(tokenType.PLUS, this.parseInfixExpression.bind(this));
         this.registerInfix(tokenType.MINUS, this.parseInfixExpression.bind(this));
@@ -112,7 +113,7 @@ export class Parser {
     }
 
     private noPrefixParseFnError(type: TokenType): void {
-        const msg = `no prefix parse function for \'${type}\' found`;
+        const msg = `no prefix parse function for \"${type}\" found`;
         this.errors.push(msg);
     }
 
@@ -373,5 +374,9 @@ export class Parser {
         }
 
         return args;
+    }
+
+    private parseStringLiteral(): Expression {
+        return new StringLiteral(this.curToken);
     }
 }

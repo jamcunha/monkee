@@ -1,6 +1,6 @@
-import { BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement } from './ast';
-import { Lexer } from './lexer';
-import { Parser } from './parser';
+import { BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, ReturnStatement, StringLiteral } from "./ast";
+import { Lexer } from "./lexer";
+import { Parser } from "./parser";
 
 function checkParserErrors(parser: Parser): void {
     if (parser.errors.length === 0) {
@@ -402,4 +402,23 @@ test("Test call expression parsing", () => {
     testLiteralExpression(exp.arguments[0], 1);
     testInfixExpression(exp.arguments[1], 2, "*", 3);
     testInfixExpression(exp.arguments[2], 4, "+", 5);
+});
+
+test("Test string literal expression", () => {
+    const input = "\"hello world\";";
+
+    const lexer = new Lexer(input);
+    const parser = new Parser(lexer);
+
+    const program = parser.parseProgram();
+    checkParserErrors(parser);
+
+    expect(program!.statements.length).toBe(1);
+
+    const stmt = program!.statements[0] as ExpressionStatement;
+    expect(stmt).toBeInstanceOf(ExpressionStatement);
+
+    const literal = stmt.expression! as StringLiteral;
+    expect(literal).toBeInstanceOf(StringLiteral);
+    expect(literal.value).toBe("hello world");
 });

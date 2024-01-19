@@ -1,4 +1,4 @@
-import { startRepl } from './repl';
+import { startRepl } from "./repl";
 
 // TODO: add a cli to choose between RLPL, RPPl and REPL
 

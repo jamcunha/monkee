@@ -155,3 +155,19 @@ test("nextToken() equality", () => {
         expect(lexer.nextToken()).toEqual(expectedToken);
     }
 });
+
+test("nextToken() string", () => {
+    const input = "\"foobar\"; \"foo bar\"";
+
+    const expected: Token[] = [
+        { type: tokenType.STRING, literal: "foobar" },
+        { type: tokenType.SEMICOLON, literal: ";" },
+        { type: tokenType.STRING, literal: "foo bar" },
+        { type: tokenType.EOF, literal: "" },
+    ];
+
+    const lexer = new Lexer(input);
+    for (const expectedToken of expected) {
+        expect(lexer.nextToken()).toEqual(expectedToken);
+    }
+});

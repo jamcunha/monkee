@@ -263,9 +263,39 @@ export class CallExpression implements AstNode {
     }
 }
 
-export type Statement = LetStatement | ReturnStatement | ExpressionStatement;
+export class StringLiteral implements AstNode {
+    private token: Token;
+    public value: string;
 
-export type Expression = Identifier | IntegerLiteral | PrefixExpression | InfixExpression | BooleanLiteral | IfExpression | FunctionLiteral | CallExpression;
+    constructor(token: Token) {
+        this.token = token;
+        this.value = token.literal;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return this.token.literal;
+    }
+}
+
+export type Statement =
+    LetStatement
+    | ReturnStatement
+    | ExpressionStatement;
+
+export type Expression =
+    Identifier
+    | IntegerLiteral
+    | PrefixExpression
+    | InfixExpression
+    | BooleanLiteral
+    | IfExpression
+    | FunctionLiteral
+    | CallExpression
+    | StringLiteral;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
