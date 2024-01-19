@@ -1,9 +1,13 @@
+import { BlockStatement, Identifier } from "./ast";
+import { Environment } from "./environment";
+
 const enum ObjectType {
     INTEGER_OBJ         = 'INTEGER',
     BOOLEAN_OBJ         = 'BOOLEAN',
     NULL_OBJ            = 'NULL',
     RETURN_VALUE_OBJ    = 'RETURN_VALUE',
     ERROR_OBJ           = 'ERROR',
+    FUNCTION_OBJ        = 'FUNCTION',
 }
 
 export class IntegerType {
@@ -64,4 +68,21 @@ export class ErrorType {
     }
 }
 
-export type Object = IntegerType | BooleanType | NullType | ReturnValue | ErrorType;
+export class FunctionType {
+    constructor(public parameters: Identifier[], public body: BlockStatement, public env: Environment) {}
+
+    public Inspect(): string {
+        const params: string[] = [];
+        for (const param of this.parameters) {
+            params.push(param.string());
+        }
+
+        return `fn(${params.join(', ')}) {\n${this.body.string()}\n}`;
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.FUNCTION_OBJ;
+    }
+}
+
+export type Object = IntegerType | BooleanType | NullType | ReturnValue | ErrorType | FunctionType;
