@@ -18,7 +18,83 @@ const builtins: Map<string, BuiltInType> = new Map([
                 return new IntegerType((args[0] as StringType).value.length);
             }
 
+            if (args[0].Type() === "ARRAY") {
+                return new IntegerType((args[0] as ArrayType).elements.length);
+            }
+
             return new ErrorType(`argument to 'len' not supported, got ${args[0].Type()}`);
+        }),
+    ],
+    [
+        "first",
+        new BuiltInType((...args: Object[]) => {
+            if (args.length !== 1) {
+                return new ErrorType(`wrong number of arguments. got=${args.length}, want=1`);
+            }
+
+            if (args[0].Type() !== "ARRAY") {
+                return new ErrorType(`argument to 'first' must be ARRAY, got ${args[0].Type()}`);
+            }
+
+            const arr = args[0] as ArrayType;
+            if (arr.elements.length > 0) {
+                return arr.elements[0];
+            }
+
+            return NULL;
+        }),
+    ],
+    [
+        "last",
+        new BuiltInType((...args: Object[]) => {
+            if (args.length !== 1) {
+                return new ErrorType(`wrong number of arguments. got=${args.length}, want=1`);
+            }
+
+            if (args[0].Type() !== "ARRAY") {
+                return new ErrorType(`argument to 'first' must be ARRAY, got ${args[0].Type()}`);
+            }
+
+            const arr = args[0] as ArrayType;
+            if (arr.elements.length > 0) {
+                return arr.elements[arr.elements.length - 1];
+            }
+
+            return NULL;
+        }),
+    ],
+    [
+        "rest",
+        new BuiltInType((...args: Object[]) => {
+            if (args.length !== 1) {
+                return new ErrorType(`wrong number of arguments. got=${args.length}, want=1`);
+            }
+
+            if (args[0].Type() !== "ARRAY") {
+                return new ErrorType(`argument to 'first' must be ARRAY, got ${args[0].Type()}`);
+            }
+
+            const arr = args[0] as ArrayType;
+            if (arr.elements.length > 0) {
+                return new ArrayType(arr.elements.slice(1));
+            }
+
+            return NULL;
+        }),
+    ],
+    [
+        "push",
+        new BuiltInType((...args: Object[]) => {
+            if (args.length !== 2) {
+                return new ErrorType(`wrong number of arguments. got=${args.length}, want=2`);
+            }
+
+            if (args[0].Type() !== "ARRAY") {
+                return new ErrorType(`argument to 'first' must be ARRAY, got ${args[0].Type()}`);
+            }
+
+            const arr = args[0] as ArrayType;
+            return new ArrayType(arr.elements.concat([args[1]]));
         }),
     ],
 ]);
