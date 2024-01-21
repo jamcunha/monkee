@@ -220,3 +220,24 @@ test("String Concatenation", () => {
     expect(evaluated.Type()).toBe("STRING");
     expect(evaluated.Inspect()).toBe("Hello World!");
 });
+
+test("Builtin Functions", () => {
+    const tests: Array<[string, (number | string)]> = [
+        ["len(\"\")", 0],
+        ["len(\"four\")", 4],
+        ["len(\"hello world\")", 11],
+        ["len(1)", "argument to 'len' not supported, got INTEGER"],
+        ["len(\"one\", \"two\")", "wrong number of arguments. got=2, want=1"],
+    ];
+
+    for (const [input, expected] of tests) {
+        const evaluated =  testEvaluation(input);
+
+        if (typeof expected === "number") {
+            testIntegerObject(evaluated, expected);
+        } else {
+            expect(evaluated.Type()).toBe("ERROR");
+            expect(evaluated.Inspect()).toBe(expected);
+        }
+    }
+});

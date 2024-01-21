@@ -1,10 +1,27 @@
 import { AstNode, BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, StringLiteral } from "./ast";
 import { Environment } from "./environment";
-import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType, StringType } from "./object";
+import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType, StringType, BuiltInType } from "./object";
 
 const TRUE = new BooleanType(true);
 const FALSE = new BooleanType(false);
 const NULL = new NullType();
+
+const builtins: Map<string, BuiltInType> = new Map([
+    [
+        "len",
+        new BuiltInType((...args: Object[]) => {
+            if (args.length !== 1) {
+                return new ErrorType(`wrong number of arguments. got=${args.length}, want=1`);
+            }
+
+            if (args[0].Type() === "STRING") {
+                return new IntegerType((args[0] as StringType).value.length);
+            }
+
+            return new ErrorType(`argument to 'len' not supported, got ${args[0].Type()}`);
+        }),
+    ],
+]);
 
 export function evaluate(node: AstNode, env: Environment): Object {
     switch (node.constructor.name) {
@@ -232,11 +249,16 @@ function evaluateBlockStatement(block: BlockStatement, env: Environment): Object
 function evalutateIdentifier(node: Identifier, env: Environment): Object {
     const val = env.get(node.value);
 
-    if (val === null) {
-        return new ErrorType(`identifier not found: ${node.value}`);
+    if (val !== null) {
+        return val;
     }
 
-    return val;
+    if (builtins.has(node.value)) {
+        return builtins.get(node.value)!;
+    }
+
+    return new ErrorType(`identifier not found: ${node.value}`);
+
 }
 
 function evaluateExpressions(exps: Expression[], env: Environment): Object[] {
@@ -255,16 +277,20 @@ function evaluateExpressions(exps: Expression[], env: Environment): Object[] {
 }
 
 function applyFunction(fn: Object, args: Object[]): Object {
-    if (fn.Type() !== "FUNCTION") {
+    if (fn.Type() !== "FUNCTION" && fn.Type() !== "BUILTIN") {
         return new ErrorType(`not a function: ${fn.Type()}`);
     }
 
-    const fnObj = fn as FunctionType;
-
-    const extendedEnv = extendFunctionEnv(fnObj, args);
-    const evaluated = evaluate(fnObj.body, extendedEnv);
-
-    return unwrapReturnValue(evaluated);
+    switch (fn.constructor.name) {
+        case "FunctionType":
+            const extendedEnv = extendFunctionEnv((fn as FunctionType), args);
+            const evaluated = evaluate((fn as FunctionType).body, extendedEnv);
+            return unwrapReturnValue(evaluated);
+        case "BuiltInType":
+            return (fn as BuiltInType).fn(...args);
+        default:
+            return new ErrorType(`not a function: ${fn.Type()}`);
+    }
 }
 
 function extendFunctionEnv(fn: FunctionType, args: Object[]): Environment {

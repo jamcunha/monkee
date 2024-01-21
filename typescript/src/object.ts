@@ -9,6 +9,7 @@ const enum ObjectType {
     ERROR_OBJ           = "ERROR",
     FUNCTION_OBJ        = "FUNCTION",
     STRING_OBJ          = "STRING",
+    BUILTIN_OBJ         = "BUILTIN",
 }
 
 export class IntegerType {
@@ -98,6 +99,18 @@ export class StringType {
     }
 }
 
+export class BuiltInType {
+    constructor(public fn: (...args: Object[]) => Object) {}
+
+    public Inspect(): string {
+        return "builtin function";
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.BUILTIN_OBJ;
+    }
+}
+
 export type Object =
     IntegerType
     | BooleanType
@@ -105,4 +118,5 @@ export type Object =
     | ReturnValue
     | ErrorType
     | FunctionType
-    | StringType;
+    | StringType
+    | BuiltInType;
