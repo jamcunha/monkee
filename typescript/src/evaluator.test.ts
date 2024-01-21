@@ -1,6 +1,6 @@
 import { Lexer } from "./lexer";
 import { Parser } from "./parser";
-import { FunctionType, Object } from "./object";
+import { ArrayType, FunctionType, Object } from "./object";
 import { evaluate } from "./evaluator";
 import { Environment } from "./environment";
 
@@ -238,6 +238,45 @@ test("Builtin Functions", () => {
         } else {
             expect(evaluated.Type()).toBe("ERROR");
             expect(evaluated.Inspect()).toBe(expected);
+        }
+    }
+});
+
+test("Array Literals", () => {
+    const input = "[1, 2 * 2, 3 + 3]";
+
+    const evaluated = testEvaluation(input);
+    expect(evaluated.Type()).toBe("ARRAY");
+    expect(evaluated.Inspect()).toBe("[1, 4, 6]");
+
+    const array = evaluated as ArrayType;
+    expect(array.elements.length).toBe(3);
+    testIntegerObject(array.elements[0], 1);
+    testIntegerObject(array.elements[1], 4);
+    testIntegerObject(array.elements[2], 6);
+});
+
+test("Array Index Expressions", () => {
+    const tests: Array<[string, (number | null)]> = [
+        ["[1, 2, 3][0]", 1],
+        ["[1, 2, 3][1]", 2],
+        ["[1, 2, 3][2]", 3],
+        ["let i = 0; [1][i];", 1],
+        ["[1, 2, 3][1 + 1];", 3],
+        ["let myArray = [1, 2, 3]; myArray[2];", 3],
+        ["let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", 6],
+        ["let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]", 2],
+        ["[1, 2, 3][3]", null],
+        ["[1, 2, 3][-1]", null],
+    ];
+
+    for (const [input, expected] of tests) {
+        const evaluated = testEvaluation(input);
+
+        if (typeof expected === "number") {
+            testIntegerObject(evaluated, expected);
+        } else {
+            testNullObject(evaluated);
         }
     }
 });

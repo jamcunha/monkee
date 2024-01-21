@@ -25,6 +25,8 @@ export const tokenType = {
     RPAREN:     ")",
     LBRACE:     "{",
     RBRACE:     "}",
+    LBRACKET:   "[",
+    RBRACKET:   "]",
 
     FUNCTION:   "FUNCTION",
     LET:        "LET",
@@ -127,6 +129,12 @@ export class Lexer {
                 break;
             case "}":
                 token = this.newToken(tokenType.RBRACE, this.ch);
+                break;
+            case "[":
+                token = this.newToken(tokenType.LBRACKET, this.ch);
+                break;
+            case "]":
+                token = this.newToken(tokenType.RBRACKET, this.ch);
                 break;
             case "\"":
                 token = this.newToken(tokenType.STRING, this.readString());

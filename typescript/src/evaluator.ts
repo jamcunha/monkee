@@ -1,6 +1,6 @@
-import { AstNode, BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, StringLiteral } from "./ast";
+import { ArrayLiteral, AstNode, BlockStatement, BooleanLiteral, CallExpression, Expression, ExpressionStatement, FunctionLiteral, Identifier, IfExpression, IndexExpression, InfixExpression, IntegerLiteral, LetStatement, PrefixExpression, Program, ReturnStatement, StringLiteral } from "./ast";
 import { Environment } from "./environment";
-import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType, StringType, BuiltInType } from "./object";
+import { IntegerType, BooleanType, Object, NullType, ReturnValue, ErrorType, FunctionType, StringType, BuiltInType, ArrayType } from "./object";
 
 const TRUE = new BooleanType(true);
 const FALSE = new BooleanType(false);
@@ -88,6 +88,25 @@ export function evaluate(node: AstNode, env: Environment): Object {
             return nativeBoolToBooleanObject((node as BooleanLiteral).value);
         case "StringLiteral":
             return new StringType((node as StringLiteral).value);
+        case "ArrayLiteral":
+            const elements = evaluateExpressions((node as ArrayLiteral).elements, env);
+            if (elements.length === 1 && elements[0].Type() === "ERROR") {
+                return elements[0];
+            }
+
+            return new ArrayType(elements);
+        case "IndexExpression":
+            const left = evaluate((node as IndexExpression).left, env);
+            if (left.Type() === "ERROR") {
+                return left;
+            }
+
+            const index = evaluate((node as IndexExpression).index!, env);
+            if (index.Type() === "ERROR") {
+                return index;
+            }
+
+            return evaluateIndexExpression(left!, index!);
         case "Identifier":
             return evalutateIdentifier((node as Identifier), env);
         default:
@@ -274,6 +293,26 @@ function evaluateExpressions(exps: Expression[], env: Environment): Object[] {
     }
 
     return result;
+}
+
+function evaluateIndexExpression(left: Object, index: Object): Object {
+    if (left.Type() === "ARRAY" && index.Type() === "INTEGER") {
+        return evaluteArrayIndexExpression(left, index);
+    }
+
+    return new ErrorType(`index operator not supported: ${left.Type()}`);
+}
+
+function evaluteArrayIndexExpression(array: Object, index: Object): Object {
+    const arrayObject = array as ArrayType;
+    const idx = (index as IntegerType).value;
+    const max = arrayObject.elements.length - 1;
+
+    if (idx < 0 || idx > max) {
+        return NULL;
+    }
+
+    return arrayObject.elements[idx];
 }
 
 function applyFunction(fn: Object, args: Object[]): Object {

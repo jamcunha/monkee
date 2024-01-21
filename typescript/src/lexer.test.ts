@@ -1,7 +1,7 @@
 import { tokenType, Token, Lexer } from "./lexer";
 
 test("nextToken() symbols", () => {
-    const input = "=+(){},;";
+    const input = "=+(){}[],;";
     const expected: Token[] = [
         { type: tokenType.ASSIGN, literal: "=" },
         { type: tokenType.PLUS, literal: "+" },
@@ -9,6 +9,8 @@ test("nextToken() symbols", () => {
         { type: tokenType.RPAREN, literal: ")" },
         { type: tokenType.LBRACE, literal: "{" },
         { type: tokenType.RBRACE, literal: "}" },
+        { type: tokenType.LBRACKET, literal: "[" },
+        { type: tokenType.RBRACKET, literal: "]" },
         { type: tokenType.COMMA, literal: "," },
         { type: tokenType.SEMICOLON, literal: ";" },
         { type: tokenType.EOF, literal: "" },

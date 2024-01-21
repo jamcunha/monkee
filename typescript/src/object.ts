@@ -10,6 +10,7 @@ const enum ObjectType {
     FUNCTION_OBJ        = "FUNCTION",
     STRING_OBJ          = "STRING",
     BUILTIN_OBJ         = "BUILTIN",
+    ARRAY_OBJ           = "ARRAY",
 }
 
 export class IntegerType {
@@ -111,6 +112,23 @@ export class BuiltInType {
     }
 }
 
+export class ArrayType {
+    constructor(public elements: Object[]) {}
+
+    public Inspect(): string {
+        const elements: string[] = [];
+        for (const element of this.elements) {
+            elements.push(element.Inspect());
+        }
+
+        return `[${elements.join(", ")}]`;
+    }
+
+    public Type(): ObjectType {
+        return ObjectType.ARRAY_OBJ;
+    }
+}
+
 export type Object =
     IntegerType
     | BooleanType
@@ -119,4 +137,5 @@ export type Object =
     | ErrorType
     | FunctionType
     | StringType
-    | BuiltInType;
+    | BuiltInType
+    | ArrayType;

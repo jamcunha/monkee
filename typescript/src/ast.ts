@@ -281,6 +281,45 @@ export class StringLiteral implements AstNode {
     }
 }
 
+export class ArrayLiteral implements AstNode {
+    private token: Token;
+    public elements: Expression[] = [];
+
+    constructor(token: Token) {
+        this.token = token;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        let out = "[";
+        out += this.elements.map((e) => e.string()).join(", ");
+        out += "]";
+        return out;
+    }
+}
+
+export class IndexExpression implements AstNode {
+    private token: Token;
+    public left: Expression;
+    public index: Expression | null = null;
+
+    constructor(token: Token, left: Expression) {
+        this.token = token;
+        this.left = left;
+    }
+
+    tokenLiteral(): string {
+        return this.token.literal;
+    }
+
+    string(): string {
+        return `(${this.left!.string()}[${this.index!.string()}])`;
+    }
+}
+
 export type Statement =
     LetStatement
     | ReturnStatement
@@ -295,7 +334,9 @@ export type Expression =
     | IfExpression
     | FunctionLiteral
     | CallExpression
-    | StringLiteral;
+    | StringLiteral
+    | ArrayLiteral
+    | IndexExpression;
 
 export class Program implements AstNode {
     public statements: Statement[] = [];
