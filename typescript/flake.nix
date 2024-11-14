@@ -18,7 +18,6 @@
             pnpm
 
             typescript
-            typescript-language-server
 
             # Useful to test something on the fly
             nodePackages.ts-node
